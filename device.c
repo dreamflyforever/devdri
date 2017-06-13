@@ -158,7 +158,7 @@ int device_open(U8 * name, U8 flag)
 	}
 
 	if (device->ops->open) {
-		device->ops->open(NULL);
+		device->ops->open(name);
 	}
 
 	device->flag |= flag;
@@ -179,7 +179,7 @@ int device_close(U8 * name)
 	}
 
 	if (device->ops->close) {
-		device->ops->close(NULL);
+		device->ops->close(name);
 	}
 
 	device->flag = 0;
