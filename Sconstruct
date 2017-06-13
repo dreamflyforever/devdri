@@ -1,0 +1,10 @@
+env = Environment(
+	CC = 'gcc',
+	CFLAGS = ['-g', '-Wall', '-I.']
+)
+
+obj_list = env.Object('list.c')
+
+obj_device = env.Object('device.c')
+
+main = env.Program("main", ['main.c', 'led_driver.c', obj_list, obj_device]);
