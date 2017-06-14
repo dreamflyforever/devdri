@@ -17,7 +17,7 @@
 typedef int (*FUNC) (U8 * buff, U8 size);
 
 typedef struct OPERATIONS_STR {
-	int (*open) (void *arg);
+	int (*open) (void *arg, U8 flag);
 	int (*read) (U8 * buff, U8 size);
 	int (*write) (U8 * buff, U8 size);
 	int (*ioctrl) (U8 cmd, void *arg);
@@ -39,7 +39,7 @@ void device_queue_init(void);
 int device_register(DEVICE * device, const U8 * name, OPERATIONS * ops);
 int device_unregister(DEVICE * device);
 int ops_init(OPERATIONS * ops,
-	     int (*open) (void *arg),
+	     int (*open) (void *arg, U8 flag),
 	     FUNC write,
 	     FUNC read,
 	     int (*ioctrl) (U8 cmd, void *arg), int (*close) (void *arg)

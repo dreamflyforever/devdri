@@ -11,15 +11,20 @@
  * Shanjin Yang   2015-3-30         the first version
  */
 
-#include "stdlib.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 #include "list.h"
 #include "device.h"
 
-#define OS_LOG(X) \
-if (!(X)) { \
-	printf("log: (%s) is wrong at %s: %d\n", #X, __FUNCTION__, \
-	__LINE__); \
-}
+#if 1
+#define print(format, ...) \
+	{printf("[%s : %s : %d] ", \
+	__FILE__, __func__, __LINE__); \
+	printf(format, ##__VA_ARGS__);}
+#else
+#define pf(format, ...) 
+#endif
 
 enum {
 	NO_SEMAPHORE = 10,
@@ -35,13 +40,19 @@ DEVICE device_queue_head;
 
 void device_queue_init(void)
 {
+	static int times;
+	times++;
+	if (times >= 2) {
+		print("device initial %d times\n", times);
+		return ;
+	}
 	list_init(&device_queue_head.list);
 }
 
 int device_register(DEVICE * device, const U8 * name, OPERATIONS * ops)
 {
 	if (device == NULL) {
-		OS_LOG("Device null\n");
+		print("Device null\n");
 		return NO_DEVICE;
 	}
 
@@ -57,7 +68,7 @@ int device_register(DEVICE * device, const U8 * name, OPERATIONS * ops)
 int device_unregister(DEVICE * device)
 {
 	if (device == NULL) {
-		OS_LOG("Device null\n");
+		print("Device null\n");
 		return NO_DEVICE;
 	}
 
@@ -67,14 +78,14 @@ int device_unregister(DEVICE * device)
 }
 
 int ops_init(OPERATIONS * ops,
-	     int (*open) (void *arg),
+	     int (*open) (void *arg, U8 flag),
 	     FUNC write,
 	     FUNC read,
 	     int (*ioctrl) (U8 cmd, void *arg), int (*close) (void *arg)
     )
 {
 	if (ops == NULL)
-		OS_LOG("OPS null\n");
+		print("OPS null\n");
 
 	ops->open = open;
 	ops->ioctrl = ioctrl;
@@ -88,14 +99,14 @@ int ops_init(OPERATIONS * ops,
 int device_read(DEVICE * device, U8 * buff, U8 size)
 {
 	if (device == NULL) {
-		OS_LOG("Not device\n");
+		print("Not device\n");
 		return NO_DEVICE;
 	}
 
 	if (device->ops->read)
 		device->ops->read(buff, size);
 	else
-		OS_LOG("Device read null\n");
+		print("Device read null\n");
 
 	return 0;
 }
@@ -103,14 +114,14 @@ int device_read(DEVICE * device, U8 * buff, U8 size)
 int device_write(DEVICE * device, U8 * buff, U8 size)
 {
 	if (device == NULL) {
-		OS_LOG("Not device\n");
+		print("Not device\n");
 		return NO_DEVICE;
 	}
 
 	if (device->ops->write)
 		device->ops->write(buff, size);
 	else
-		OS_LOG("Device write null\n");
+		print("Device write null\n");
 
 	return 0;
 }
@@ -118,14 +129,14 @@ int device_write(DEVICE * device, U8 * buff, U8 size)
 int device_ioctrl(DEVICE * device, U8 cmd, void *arg)
 {
 	if (device == NULL) {
-		OS_LOG("Not device\n");
+		print("Not device\n");
 		return NO_DEVICE;
 	}
 
 	if (device->ops->ioctrl)
 		device->ops->ioctrl(cmd, arg);
 	else
-		OS_LOG("Device cmd null\n");
+		print("Device cmd null\n");
 
 	return 0;
 }
@@ -153,12 +164,12 @@ int device_open(U8 * name, U8 flag)
 	DEVICE *device = device_find(name);
 
 	if (!device) {
-		OS_LOG("No device\n");
+		print("No device %s\n", name);
 		return NO_DEVICE;
 	}
 
 	if (device->ops->open) {
-		device->ops->open(name);
+		device->ops->open(name, flag);
 	}
 
 	device->flag |= flag;
@@ -174,7 +185,7 @@ int device_close(U8 * name)
 	DEVICE *device = device_find(name);
 
 	if (!device) {
-		OS_LOG("No device\n");
+		print("No device\n");
 		return NO_DEVICE;
 	}
 
@@ -184,6 +195,24 @@ int device_close(U8 * name)
 
 	device->flag = 0;
 	device->open_count--;
+
+	return 0;
+}
+
+int device_traverse()
+{
+	DEVICE *device;
+	LIST *tmp = &device_queue_head.list;
+	print("device list :\n");
+	while (!is_list_last(tmp)) {
+
+		device = list_entry(tmp->next, DEVICE, list);
+		tmp = tmp->next;
+
+		if (device->name != NULL) {
+			print("%s\n", device->name);
+		}
+	}
 
 	return 0;
 }
