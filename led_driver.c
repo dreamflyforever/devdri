@@ -2,21 +2,21 @@
 #include "list.h"
 #include "device.h"
 
-int led_open(char *name, char flag)
+int led_open(char *name, U8 flag)
 {
 	printf("%s open flag: %d\n", name, flag);
 	return 0;
 }
 
-int led_read(U8 * buff, U8 size)
+int led_read(char * buff, U8 size)
 {
 	printf("led read\n");
 	return 0;
 }
 
-int led_write(U8 * buff, U8 size)
+int led_write(char * buff, U8 size)
 {
-	printf("led write\n");
+	printf("led write: %s\n", buff);
 	return 0;
 }
 
@@ -46,3 +46,10 @@ OPERATIONS update_ops = {
 	.write = led_write,
 	.close = led_close,
 };
+
+int device_init(DEVICE *dev, char *dev_name)
+{
+	ops_init(&led_ops, led_open, led_write, led_read, NULL, led_close);
+	device_register(dev, dev_name, &led_ops);
+	return 0;
+}

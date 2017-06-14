@@ -17,14 +17,11 @@
 #include "list.h"
 #include "device.h"
 
-#if 1
-#define print(format, ...) \
-	{printf("[%s : %s : %d] ", \
-	__FILE__, __func__, __LINE__); \
-	printf(format, ##__VA_ARGS__);}
-#else
-#define pf(format, ...) 
-#endif
+#define OS_LOG(X) \
+if (!(X)) { \
+	printf("log: (%s) is wrong at %s: %d\n", #X, __FUNCTION__, \
+	__LINE__); \
+}
 
 enum {
 	NO_SEMAPHORE = 10,
@@ -43,16 +40,17 @@ void device_queue_init(void)
 	static int times;
 	times++;
 	if (times >= 2) {
-		print("device initial %d times\n", times);
+		printf("device initial %d times\n", times);
 		return ;
 	}
+
 	list_init(&device_queue_head.list);
 }
 
-int device_register(DEVICE * device, const U8 * name, OPERATIONS * ops)
+int device_register(DEVICE * device, const char * name, OPERATIONS * ops)
 {
 	if (device == NULL) {
-		print("Device null\n");
+		OS_LOG("Device null\n");
 		return NO_DEVICE;
 	}
 
@@ -68,9 +66,10 @@ int device_register(DEVICE * device, const U8 * name, OPERATIONS * ops)
 int device_unregister(DEVICE * device)
 {
 	if (device == NULL) {
-		print("Device null\n");
+		OS_LOG("Device null\n");
 		return NO_DEVICE;
 	}
+
 	ops_init(device->ops, NULL, NULL, NULL, NULL, NULL);
 	list_delete(&device->list);
 
@@ -78,15 +77,15 @@ int device_unregister(DEVICE * device)
 }
 
 int ops_init(OPERATIONS * ops,
-	     int (*open) (void *arg, U8 flag),
+	     int (*open)(char *arg, U8 flag),
 	     FUNC write,
 	     FUNC read,
-	     int (*ioctrl) (U8 cmd, void *arg),
-	     int (*close) ()
-    )
+	     int (*ioctrl)(U8 cmd, void *arg),
+	     int (*close)()
+)
 {
 	if (ops == NULL)
-		print("OPS null\n");
+		OS_LOG("OPS null\n");
 
 	ops->open = open;
 	ops->ioctrl = ioctrl;
@@ -97,32 +96,32 @@ int ops_init(OPERATIONS * ops,
 	return 0;
 }
 
-int device_read(DEVICE * device, U8 * buff, U8 size)
+int device_read(DEVICE * device, char * buff, U8 size)
 {
 	if (device == NULL) {
-		print("Not device\n");
+		OS_LOG("Not device\n");
 		return NO_DEVICE;
 	}
 
 	if (device->ops->read)
 		device->ops->read(buff, size);
 	else
-		print("Device read null\n");
+		OS_LOG("Device read null\n");
 
 	return 0;
 }
 
-int device_write(DEVICE * device, U8 * buff, U8 size)
+int device_write(DEVICE * device, char * buff, U8 size)
 {
 	if (device == NULL) {
-		print("Not device\n");
+		OS_LOG("Not device\n");
 		return NO_DEVICE;
 	}
 
 	if (device->ops->write)
 		device->ops->write(buff, size);
 	else
-		print("Device write null\n");
+		OS_LOG("Device write null\n");
 
 	return 0;
 }
@@ -130,19 +129,19 @@ int device_write(DEVICE * device, U8 * buff, U8 size)
 int device_ioctrl(DEVICE * device, U8 cmd, void *arg)
 {
 	if (device == NULL) {
-		print("Not device\n");
+		OS_LOG("Not device\n");
 		return NO_DEVICE;
 	}
 
 	if (device->ops->ioctrl)
 		device->ops->ioctrl(cmd, arg);
 	else
-		print("Device cmd null\n");
+		OS_LOG("Device cmd null\n");
 
 	return 0;
 }
 
-DEVICE *device_find(U8 * name)
+DEVICE *device_find(char * name)
 {
 	DEVICE *device;
 	LIST *tmp = &device_queue_head.list;
@@ -160,19 +159,16 @@ DEVICE *device_find(U8 * name)
 	return NULL;
 }
 
-int device_open(DEVICE *device, U8 * name, U8 flag)
+int device_open(DEVICE *device, char * name, U8 flag)
 {
 	if (!device) {
-		print("No device %s\n", name);
+		OS_LOG("No device\n");
 		return NO_DEVICE;
 	}
 
 	if (device->ops->open) {
 		device->ops->open(name, flag);
-	} else {
-		print("device open NULL, maybe no register\n");
 	}
-
 
 	device->flag |= flag;
 
@@ -185,14 +181,12 @@ int device_open(DEVICE *device, U8 * name, U8 flag)
 int device_close(DEVICE *device)
 {
 	if (!device) {
-		print("No device\n");
+		OS_LOG("No device\n");
 		return NO_DEVICE;
 	}
 
 	if (device->ops->close) {
 		device->ops->close();
-	} else {
-		print("device close NULL, maybe no register\n");
 	}
 
 	device->flag = 0;
@@ -205,14 +199,14 @@ int device_traverse()
 {
 	DEVICE *device;
 	LIST *tmp = &device_queue_head.list;
-	print("device list :\n");
+	printf("device list :\n");
 	while (!is_list_last(tmp)) {
 
 		device = list_entry(tmp->next, DEVICE, list);
 		tmp = tmp->next;
 
 		if (device->name != NULL) {
-			print("%s\n", device->name);
+			printf("%s\n", device->name);
 		}
 	}
 
