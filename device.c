@@ -71,7 +71,7 @@ int device_unregister(DEVICE * device)
 		print("Device null\n");
 		return NO_DEVICE;
 	}
-
+	ops_init(device->ops, NULL, NULL, NULL, NULL, NULL);
 	list_delete(&device->list);
 
 	return 0;
@@ -169,7 +169,10 @@ int device_open(DEVICE *device, U8 * name, U8 flag)
 
 	if (device->ops->open) {
 		device->ops->open(name, flag);
+	} else {
+		print("device open NULL, maybe no register\n");
 	}
+
 
 	device->flag |= flag;
 
@@ -188,6 +191,8 @@ int device_close(DEVICE *device)
 
 	if (device->ops->close) {
 		device->ops->close();
+	} else {
+		print("device close NULL, maybe no register\n");
 	}
 
 	device->flag = 0;
