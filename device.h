@@ -21,7 +21,7 @@ typedef struct OPERATIONS_STR {
 	int (*read) (U8 * buff, U8 size);
 	int (*write) (U8 * buff, U8 size);
 	int (*ioctrl) (U8 cmd, void *arg);
-	int (*close) (void *arg);
+	int (*close) ();
 } OPERATIONS;
 
 typedef struct DEVICE_STR {
@@ -42,12 +42,13 @@ int ops_init(OPERATIONS * ops,
 	     int (*open) (void *arg, U8 flag),
 	     FUNC write,
 	     FUNC read,
-	     int (*ioctrl) (U8 cmd, void *arg), int (*close) (void *arg)
+	     int (*ioctrl) (U8 cmd, void *arg),
+	     int (*close) ()
     );
-int device_open(U8 * name, U8 flag);
+int device_open(DEVICE *device, U8 * name, U8 flag);
 int device_read(DEVICE * device, U8 * buff, U8 size);
 int device_write(DEVICE * device, U8 * buff, U8 size);
 int device_ioctrl(DEVICE * device, U8 cmd, void *arg);
-int device_close(U8 * name);
+int device_close(DEVICE *device);
 
 #endif

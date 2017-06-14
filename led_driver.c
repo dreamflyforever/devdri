@@ -20,9 +20,9 @@ int led_write(U8 * buff, U8 size)
 	return 0;
 }
 
-int led_close(U8 * name)
+int led_close()
 {
-	printf("%s close\n", name);
+	printf("led close\n");
 	return 0;
 }
 

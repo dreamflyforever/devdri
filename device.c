@@ -81,7 +81,8 @@ int ops_init(OPERATIONS * ops,
 	     int (*open) (void *arg, U8 flag),
 	     FUNC write,
 	     FUNC read,
-	     int (*ioctrl) (U8 cmd, void *arg), int (*close) (void *arg)
+	     int (*ioctrl) (U8 cmd, void *arg),
+	     int (*close) ()
     )
 {
 	if (ops == NULL)
@@ -159,10 +160,8 @@ DEVICE *device_find(U8 * name)
 	return NULL;
 }
 
-int device_open(U8 * name, U8 flag)
+int device_open(DEVICE *device, U8 * name, U8 flag)
 {
-	DEVICE *device = device_find(name);
-
 	if (!device) {
 		print("No device %s\n", name);
 		return NO_DEVICE;
@@ -180,17 +179,15 @@ int device_open(U8 * name, U8 flag)
 	return 0;
 }
 
-int device_close(U8 * name)
+int device_close(DEVICE *device)
 {
-	DEVICE *device = device_find(name);
-
 	if (!device) {
 		print("No device\n");
 		return NO_DEVICE;
 	}
 
 	if (device->ops->close) {
-		device->ops->close(name);
+		device->ops->close();
 	}
 
 	device->flag = 0;
